@@ -1,4 +1,4 @@
-defmodule TodoList.CsvImporter do
+defmodule Todo.List.CsvImporter do
 
   @doc """
   Reads Todo lists from CSV file

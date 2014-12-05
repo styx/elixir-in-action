@@ -1,8 +1,8 @@
-defmodule Todo.Mixfile do
+defmodule TodoCache.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :todo,
+    [app: :todo_cache,
      version: "0.0.1",
      elixir: "~> 1.0",
      deps: deps]
