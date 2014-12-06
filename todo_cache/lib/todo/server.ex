@@ -7,8 +7,7 @@ defmodule Todo.Server do
   """
 
   def start do
-    {:ok, pid} = GenServer.start_link(__MODULE__, nil)
-    pid
+    GenServer.start_link(__MODULE__, nil)
   end
 
   def init(_) do
