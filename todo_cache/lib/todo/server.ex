@@ -6,7 +6,7 @@ defmodule Todo.Server do
   Todo.Server module
   """
 
-  def start(name) do
+  def start_link(name) do
     GenServer.start_link(__MODULE__, name)
   end
 
