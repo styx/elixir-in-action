@@ -7,6 +7,7 @@ defmodule Todo.Server do
   """
 
   def start_link(name) do
+    IO.puts("Starting database server...")
     GenServer.start_link(__MODULE__, name)
   end
 
