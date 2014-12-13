@@ -7,7 +7,7 @@ defmodule Todo.ProcessRegistry do
   ProcessRegistry module
   """
 
-  def start do
+  def start_link do
     IO.puts "Starting process registry"
     GenServer.start_link(__MODULE__, nil, name: :process_registry)
   end
@@ -56,7 +56,7 @@ defmodule Todo.ProcessRegistry do
     {:reply, key, HashDict.delete(state, key)}
   end
 
-  def handle_info({:DOWN, _, :process, from_pid, _}, state) do
+  def handle_info({:DOWN, _, :process, pid, _}, state) do
     new_reristry =
       for {k, v} <- state, v != pid, into: HashDict.new do
         {k, v}
