@@ -1,19 +1,9 @@
 defmodule Todo.ProcessRegistry do
   import Kernel, except: [send: 2]
 
-  use GenServer
-
-  @doc """
-  ProcessRegistry module
-  """
-
   def start_link do
     IO.puts "Starting process registry"
     GenServer.start_link(__MODULE__, nil, name: :process_registry)
-  end
-
-  def init(_) do
-    {:ok, HashDict.new}
   end
 
   def register_name(key, pid) do
@@ -25,7 +15,7 @@ defmodule Todo.ProcessRegistry do
   end
 
   def unregister_name(key) do
-    GenServer.cast(:process_registry, {:unregister_name, key})
+    GenServer.call(:process_registry, {:unregister_name, key})
   end
 
   def send(key, message) do
@@ -37,31 +27,39 @@ defmodule Todo.ProcessRegistry do
     end
   end
 
+  def init(_) do
+    {:ok, HashDict.new}
+  end
 
-  def handle_call({:register_name, key, pid}, _caller, state) do
-    case HashDict.get(state, key) do
-    nil ->
-      Process.monitor(pid)
-      {:reply, :yes, HashDict.put(state, key, pid)}
-    _ ->
-      {:reply, :no, state}
+
+  def handle_call({:register_name, key, pid}, _, process_registry) do
+    case HashDict.get(process_registry, key) do
+      nil ->
+        # Sets up a monitor to the registered process
+        Process.monitor(pid)
+        {:reply, :yes, HashDict.put(process_registry, key, pid)}
+      _ ->
+        {:reply, :no, process_registry}
     end
   end
 
-  def handle_call({:whereis_name, key}, _caller, state) do
-    {:reply, HashDict.get(state, key, :undefined), state}
+  def handle_call({:whereis_name, key}, _, process_registry) do
+    {:reply, HashDict.get(process_registry, key, :undefined), process_registry}
   end
 
-  def handle_call({:unregister_name, key}, _caller, state) do
-    {:reply, key, HashDict.delete(state, key)}
+  def handle_call({:unregister_name, key}, _, process_registry) do
+    {:reply, key, HashDict.delete(process_registry, key)}
   end
 
-  def handle_info({:DOWN, _, :process, pid, _}, state) do
-    new_reristry =
-      for {k, v} <- state, v != pid, into: HashDict.new do
+  # Handles termination of a registered process
+  def handle_info({:DOWN, _, :process, pid, _}, process_registry) do
+    # Here, we have to remove the entry by value. We basically rebuild the
+    # HashDict by including all registry entries except for the crashed pid.
+    new_registry =
+      for {k, v} <- process_registry, v != pid, into: HashDict.new do
         {k, v}
       end
-    {:noreply, new_reristry}
+    {:noreply, new_registry}
   end
 
   def handle_info(_, state), do: {:noreply, state}
